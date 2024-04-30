@@ -2,9 +2,12 @@ torch==2.2.0
 torchaudio==2.2.0
 torchmetrics
 numpy
+scipy
+pyworld
 tqdm
 matplotlib
 pandas
+notebook
 
 black
 isort
