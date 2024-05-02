@@ -1,13 +1,30 @@
+from dataclasses import dataclass
+
 import numpy as np
 import pyworld as pw
 import scipy.signal as ss
-import torch
-import torchaudio
 from scipy.interpolate import interp1d
-from scipy.spatial import KDTree
 
 
-def get_f0(audio, spectrogram, sr=16000):
+@dataclass
+class STFTConfig:
+    nperseg: int = 512
+    noverlap: int = 256
+    nfft: int = 512
+    sr: int = 16000
+    window: str = "hann"
+
+
+class LTFTConfig:
+    nperseg: int = 2048
+    noverlap: int = 1024
+    nfft: int = 2048
+    sr: int = 16000
+    window: str = "hann"
+
+
+def get_f0(audio, spectrogram, stft_config=STFTConfig()):
+    sr = stft_config.sr
     # audio = audio.to(torch.float64).numpy().sum(axis=0)
 
     # with frame_period=k  k * f0.shape == len(audio) in seconds * 1000
@@ -38,31 +55,32 @@ def get_amplitude_and_phase(spectrogram):
     return amplitude, phase
 
 
-def get_spectrogram(audio, sr=16000):
+def get_spectrogram(audio, stft_config=STFTConfig()):
     freqs, times, spectrogram = ss.spectrogram(
         audio,
-        fs=sr,
-        nperseg=256,
-        noverlap=256 // 8,
-        window="hamming",
-        nfft=256,
+        fs=stft_config.sr,
+        nperseg=stft_config.nperseg,
+        noverlap=stft_config.noverlap,
+        window=stft_config.window,
+        nfft=stft_config.nfft,
         mode="complex",
     )
     print(freqs)
+    print(times)
     print(spectrogram)
     print(freqs.shape, times.shape, spectrogram.shape)
 
     return freqs, times, spectrogram
 
 
-def get_long_spectrogram(audio, sr=16000):
+def get_long_spectrogram(audio, ltft_config=LTFTConfig()):
     freqs, times, spectrogram = ss.spectrogram(
         audio,
-        fs=sr,
-        nperseg=16000,
-        noverlap=16000 // 8,
-        window="hamming",
-        nfft=16000,
+        fs=ltft_config.sr,
+        nperseg=ltft_config.nperseg,
+        noverlap=ltft_config.noverlap,
+        window=ltft_config.window,
+        nfft=ltft_config.nfft,
         mode="complex",
     )
 
