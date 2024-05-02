@@ -19,13 +19,14 @@ def get_filter(audio, audio_hat):
 
     spectr_filter = spectr_filter.mean(axis=-1)
 
+    # convert to time domain
+    spectr_filter = np.fft.irfft(spectr_filter)
+
     return spectr_filter
 
 
 def apply_filter(audio, spectr_filter, ltft_config=LTFTConfig()):
     print(spectr_filter.shape)
-    print(spectr_filter)
-    spectr_filter = np.fft.irfft(spectr_filter)
     print(spectr_filter)
     predicted_audio = ss.convolve(audio, spectr_filter, mode="same")
     # spectrogram = get_long_spectrogram(audio)
@@ -89,11 +90,43 @@ def get_audio_hat(audio_for_f0, audio_for_other, stft_config=STFTConfig()):
     return audio_hat
 
 
-def dereverberate(audio):
-    audio_hat = get_audio_hat(audio, audio)
+def one_step(audio_for_f0, audio_for_other):
+    audio_hat = get_audio_hat(audio_for_f0, audio_for_other)
 
-    spectr_filter = get_filter(audio, audio_hat)
+    spectr_filter = get_filter(audio_for_other, audio_hat)
 
-    predicted_audio = apply_filter(audio, spectr_filter)
+    predicted_audio = apply_filter(audio_for_other, spectr_filter)
 
-    return predicted_audio
+    return predicted_audio, spectr_filter
+
+
+def dereverberate(audio, steps=3):
+    # STEP 1
+    predicted_audio_1, spectr_filter_1 = one_step(audio, audio)
+
+    if steps == 1:
+        return predicted_audio_1, spectr_filter_1
+
+    # STEP 2
+    predicted_audio_2, spectr_filter_2 = one_step(predicted_audio_1, audio)
+
+    if steps == 2:
+        return predicted_audio_2, spectr_filter_2
+
+    # STEP 3
+    predicted_audio_3, spectr_filter_3 = one_step(predicted_audio_2, predicted_audio_2)
+
+    print(spectr_filter_1.shape, spectr_filter_2.shape, spectr_filter_3.shape)
+
+    spectr_filter_full = ss.convolve(spectr_filter_2, spectr_filter_3, mode="same")
+
+    if steps == 3:
+        return predicted_audio_3, spectr_filter_full
+
+    if steps == "two_filters":
+        return (
+            apply_filter(apply_filter(audio, spectr_filter_2), spectr_filter_3),
+            spectr_filter_full,
+        )
+
+    return apply_filter(audio, spectr_filter_full), spectr_filter_full
