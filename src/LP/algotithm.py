@@ -104,6 +104,6 @@ def LP_dereverberation(signal):
     # Apply linear prediction analysis to the signal
     predicted_signal, residual_signal = linear_prediction_analysis(signal)
     coefficients = adaptive_inverse_filtering(signal, 100, predicted_signal, residual_signal)
-    dereverbeted_signal = spectral_subtraction(signal, 16000)
+    dereverberated_signal = spectral_subtraction(signal, 16000)
 
-    return dereverbeted_signal, coefficients
+    return dereverberated_signal, coefficients
