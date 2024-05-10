@@ -44,6 +44,24 @@ To install our repository, follow these steps:
    pre-commit install
    ```
 
+## How To Use
+
+To perform dereverberation on one of the datasets from `src/datasets`, use the following command:
+
+```bash
+python3 dereverberate.py -d=DATASET_NAME -a=ALGORITHM_NAME
+```
+
+Where `DATASET_NAME` is name of the class from `src/datasets` and `ALGORITHM_NAME` is the name of the dereverberation algorithm (HERB, LP, WPE). Dereverberated signals are saved in `data/dereverberated/DATASET_NAME`.
+
+To calculate metrics after dereverberation, run this script:
+
+```bash
+python3 scripts/calculate_metrics.py -d=DATASET_NAME
+```
+
+Metrics dictionary will be saved in `data/DATASET_NAME_metrics.pth`.
+
 ## Authors
 
 - Petr Grinberg, EPFL
