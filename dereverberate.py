@@ -1,11 +1,12 @@
 from argparse import ArgumentParser
 
+import numpy as np
 import scipy.signal as ss
 import torch
 from tqdm.auto import tqdm
 
 import src.datasets
-from src.herb.algorithm import dereverberate
+from src.HERB.algorithm import dereverberate
 from src.LP.algotithm import LP_dereverberation
 from src.utils import ROOT_PATH
 
@@ -14,7 +15,9 @@ def main(dataset_name, algorithm_name):
     dataset_class = getattr(src.datasets, dataset_name)
     dataset = dataset_class()
 
-    data_path = ROOT_PATH / "data" / "dereverberated" / dataset_name
+    data_path = (
+        ROOT_PATH / "data" / "dereverberated" / f"{dataset_name}_{algorithm_name}"
+    )
     data_path.mkdir(exist_ok=True, parents=True)
 
     if algorithm_name == "HERB":
@@ -28,6 +31,7 @@ def main(dataset_name, algorithm_name):
         data = dataset[i]
 
         dereverb_speech, inverse_filter = algorithm(data["reverb_speech"])
+        dereverb_speech = dereverb_speech / np.abs(dereverb_speech).max()
 
         dereverb_rir = ss.lfilter(inverse_filter, [1], data["rir"])
 

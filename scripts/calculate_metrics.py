@@ -19,7 +19,7 @@ from torchmetrics.text import CharErrorRate, WordErrorRate
 
 ROOT_PATH = Path(__file__).absolute().resolve().parent.parent
 SAMPLE_RATE = 16000
-DECAY_DB = 25
+DECAY_DB = 20
 
 ASR_MODEL = nemo_asr.models.EncDecCTCModel.restore_from(
     ROOT_PATH / "data" / "QuartzNet5x5LS-En.nemo"
@@ -100,15 +100,17 @@ def get_single_metrics(data):
     return metrics
 
 
-def calculate_metrics(dataset_name):
+def calculate_metrics(dataset_name, algorithm_name):
     data_path = ROOT_PATH / "data" / "dereverberated"
     assert data_path.exists(), "dir not found, evaluate algorithm on dataset"
+
+    save_dir = f"{dataset_name}_{algorithm_name}"
 
     result_metrics = defaultdict(float)
     amount = 0
 
-    for file in os.listdir(str(data_path / dataset_name)):
-        data = torch.load(data_path / dataset_name / file)
+    for file in os.listdir(str(data_path / save_dir)):
+        data = torch.load(data_path / save_dir / file)
         metrics = get_single_metrics(data)
 
         for k, v in metrics.items():
@@ -120,7 +122,9 @@ def calculate_metrics(dataset_name):
         result_metrics[k] = v / amount
         print(f"Metric: {k},\tValue: {result_metrics[k]}")
 
-    torch.save(result_metrics, data_path / f"{dataset_name}_metrics.pth")
+    torch.save(
+        result_metrics, data_path / f"{dataset_name}_{algorithm_name}_metrics.pth"
+    )
 
 
 if __name__ == "__main__":
@@ -134,6 +138,14 @@ if __name__ == "__main__":
         help="Dataset name inside data dir (default: None)",
     )
 
+    args.add_argument(
+        "-a",
+        "--algorithm_name",
+        default=None,
+        type=str,
+        help="Algorithm Name (default: None)",
+    )
+
     args = args.parse_args()
 
-    calculate_metrics(args.dataset_name)
+    calculate_metrics(args.dataset_name, args.algorithm_name)

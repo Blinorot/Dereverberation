@@ -73,6 +73,7 @@ class ExampleDataset(Dataset):
         rir = rir.to(torch.float64).numpy().sum(axis=0)
         speech = speech.to(torch.float64).numpy().sum(axis=0)
         reverb_speech = reverb_speech.to(torch.float64).numpy().sum(axis=0)
+        reverb_speech = reverb_speech / np.abs(reverb_speech).max()
 
         return {
             "speech": speech,

@@ -132,12 +132,14 @@ def one_step(audio_for_f0, audio_for_other):
 
 
 def pad_audio(audio, n_repeats):
+    if n_repeats == 0:
+        return audio
     audio = np.concatenate([audio, np.zeros(1000)])
     audio = np.tile(audio, n_repeats)
     return audio
 
 
-def dereverberate(short_audio, steps=3, n_repeats=1):
+def dereverberate(short_audio, steps=3, n_repeats=0):
     # Step 0
     audio = pad_audio(short_audio, n_repeats)
 
