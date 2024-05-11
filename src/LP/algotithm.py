@@ -60,29 +60,54 @@ def adaptive_inverse_filtering(signal, nIterations, predicted_signal, residual_s
     
     return inverse_filter_coeffs
 
-def inverse_filter_frequency_domain(Yr, mu, M):
-    # Initialize G
-    G= np.arange(len(Yr))
-    # Function to calculate FFT of f(t)
-    def fft_f_t(z_square, z_cube, z_fourth):
-        return 4 * (z_square * z_cube - z_fourth * np.sqrt(z_square)) / (z_square**3)
+def inverse_filter_frequency_domain(rev_residual, mu=3e-6, LF=300, niter=200):
+    p = LF  # Filter order
+    ss = LF // 5  # Step size
+    bs = ss + p - 1  # Block size
 
-    for n in range(len(Yr)):
-        # Calculate F(m)
-        F_m = fft_f_t(Yr[n] ** 2, Yr[n] ** 3, Yr[n] ** 4)
+    # Generate initial guess for inverse filter
+    gh = np.arange(1, p + 1) / np.sqrt(np.sum(np.arange(1, p + 1)) ** 2)
+    Gh = np.fft.fft(np.concatenate((gh, np.zeros(ss - 1))))
 
-        # Calculate G'(n+1)
-        G_prime = G + (mu / M) * np.sum(F_m)
+    zkurt = np.zeros(niter)
 
-        # Normalize G'(n+1)
-        G = G_prime / np.abs(G_prime).max()
+    zr2 = np.zeros(bs)
+    zr3 = np.zeros(bs)
+    zr4 = np.zeros(bs)
 
-    # Convert G from frequency domain to time domain using IFFT
-    g_time_domain = np.fft.ifft(G)
-    g_time_domain = np.abs(g_time_domain)
+    for m in range(niter):
+        yrn = np.zeros(bs)
+        for k in range(0, len(rev_residual), ss):
+            yrn[:p-1] = yrn[-(p-1):]
+            yrn[p:] = rev_residual[k:k+ss-1]
+    
 
-    return g_time_domain
+            Yrn = np.fft.fft(yrn)
+            cYrn = np.conj(Yrn)
+            zrn = np.fft.ifft(Gh * Yrn)
 
+            zrn[:p-1] = 0
+            zr2[p:] = zrn[p:] ** 2
+            zr3[p:] = zrn[p:] ** 3
+            zr4[p:] = zrn[p:] ** 4
+
+            Z2 = np.sum(zr2[p:])
+            Z4 = np.sum(zr4[p:])
+
+            zkurt[m] = max(zkurt[m], Z4 / (Z2 ** 2 + 1e-15) * ss)
+
+            z3y = np.fft.fft(zr3) * cYrn
+            zy = np.fft.fft(zrn) * cYrn
+
+            gJ = 4 * (Z2 * z3y - Z4 * zy) / (Z2 ** 3 + 1e-20) * ss
+            Gh = Gh + mu * gJ
+
+            # Normalize Gh
+            Gh = Gh / np.sqrt(np.sum(np.abs(Gh) ** 2) / bs)
+
+            G_time = np.fft.ifft(Gh)
+
+    return G_time
 
 def spectral_subtraction(z, fs, wlen=64e-3, hop=8e-3, nfft=1024, ro_w=7, a_w=5, gS=0.32, epS=1e-3, nu1=0.05, nu2=4):
     # STFT calculation
@@ -131,11 +156,11 @@ def spectral_subtraction(z, fs, wlen=64e-3, hop=8e-3, nfft=1024, ro_w=7, a_w=5, 
 
 
 
-def LP_dereverberation(signal, mu=0.1, nIterations=100):
+def LP_dereverberation(signal, mu=0.1, Lf=300, nIterations=200):
     # Apply linear prediction analysis to the signal
     predicted_signal, residual_signal = linear_prediction_analysis(signal)
-    inverse_filter = adaptive_inverse_filtering(signal, 100, predicted_signal, residual_signal)
-    # inverse_filter = inverse_filter_frequency_domain(residual_signal, mu, 10)
+    # inverse_filter = adaptive_inverse_filtering(signal, 100, predicted_signal, residual_signal)
+    inverse_filter = inverse_filter_frequency_domain(residual_signal, mu, Lf, nIterations)
     inverse_filtered_signal = lfilter(inverse_filter, 1, signal)
     dereverberated_signal = spectral_subtraction(inverse_filtered_signal, 16000)
 
