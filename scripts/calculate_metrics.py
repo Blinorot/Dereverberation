@@ -21,7 +21,9 @@ ROOT_PATH = Path(__file__).absolute().resolve().parent.parent
 SAMPLE_RATE = 16000
 DECAY_DB = 25
 
-ASR_MODEL = nemo_asr.models.EncDecCTCModel.from_pretrained("QuartzNet15x5Base-En")
+ASR_MODEL = nemo_asr.models.EncDecCTCModel.restore_from(
+    ROOT_PATH / "data" / "QuartzNet5x5LS-En.nemo"
+)
 METRICS = {
     "pesq": PerceptualEvaluationSpeechQuality(SAMPLE_RATE, mode="wb"),
     "stoi": ShortTimeObjectiveIntelligibility(SAMPLE_RATE),
