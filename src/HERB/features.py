@@ -17,10 +17,10 @@ class STFTConfig:
 
 class LTFTConfig:
     nperseg: int = 2048
-    noverlap: int = 1024
+    noverlap: int = 0
     nfft: int = 2048
     sr: int = 16000
-    window: str = "hann"
+    window: str = "boxcar"
 
 
 def get_f0(audio, spectrogram, stft_config=STFTConfig()):
@@ -64,6 +64,7 @@ def get_spectrogram(audio, stft_config=STFTConfig()):
         window=stft_config.window,
         nfft=stft_config.nfft,
         mode="complex",
+        return_onesided=True,
     )
     print(freqs)
     print(times)
@@ -82,6 +83,7 @@ def get_long_spectrogram(audio, ltft_config=LTFTConfig()):
         window=ltft_config.window,
         nfft=ltft_config.nfft,
         mode="complex",
+        return_onesided=True,
     )
 
     return spectrogram

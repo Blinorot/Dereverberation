@@ -57,6 +57,7 @@ Where `DATASET_NAME` is name of the class from `src/datasets` and `ALGORITHM_NAM
 To calculate metrics after dereverberation, run this script:
 
 ```bash
+bash scripts/download_asr.sh
 python3 scripts/calculate_metrics.py -d=DATASET_NAME
 ```
 
