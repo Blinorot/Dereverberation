@@ -79,11 +79,14 @@ def inverse_filter_frequency_domain(rev_residual, mu=3e-6, LF=300, niter=200):
         yrn = np.zeros(bs)
         for k in range(0, len(rev_residual), ss):
             yrn[:p-1] = yrn[-(p-1):]
-            yrn[p:] = rev_residual[k:k+ss-1]
+            rev_slice = rev_residual[k:k + ss-1]
+            if rev_slice.shape[-1] < yrn[p:].shape[-1]:
+                rev_slice = np.concatenate((rev_slice, np.zeros(yrn[p:].shape[-1] - rev_slice.shape[-1])))
+            yrn[p:] = rev_slice
     
 
             Yrn = np.fft.fft(yrn)
-            cYrn = np.conj(Yrn)
+            #cYrn = np.conj(Yrn)
             zrn = np.fft.ifft(Gh * Yrn)
 
             zrn[:p-1] = 0
@@ -96,8 +99,8 @@ def inverse_filter_frequency_domain(rev_residual, mu=3e-6, LF=300, niter=200):
 
             zkurt[m] = max(zkurt[m], Z4 / (Z2 ** 2 + 1e-15) * ss)
 
-            z3y = np.fft.fft(zr3) * cYrn
-            zy = np.fft.fft(zrn) * cYrn
+            z3y = np.fft.fft(zr3) * Yrn
+            zy = np.fft.fft(zrn) * Yrn
 
             gJ = 4 * (Z2 * z3y - Z4 * zy) / (Z2 ** 3 + 1e-20) * ss
             Gh = Gh + mu * gJ
@@ -105,7 +108,7 @@ def inverse_filter_frequency_domain(rev_residual, mu=3e-6, LF=300, niter=200):
             # Normalize Gh
             Gh = Gh / np.sqrt(np.sum(np.abs(Gh) ** 2) / bs)
 
-            G_time = np.fft.ifft(Gh)
+            G_time = np.fft.irfft(Gh)
 
     return G_time
 
