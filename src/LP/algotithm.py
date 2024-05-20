@@ -184,7 +184,7 @@ def spectral_subtraction(
     return xh
 
 
-def LP_dereverberation(signal, mu=3e-9, Lf=300, nIterations=200):
+def LP_dereverberation(signal, mu=3e-9, Lf=300, nIterations=500):
     # Apply linear prediction analysis to the signal
     predicted_signal, residual_signal = linear_prediction_analysis(signal)
     # inverse_filter = adaptive_inverse_filtering(signal, 100, predicted_signal, residual_signal)

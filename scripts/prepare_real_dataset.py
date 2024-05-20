@@ -27,7 +27,7 @@ def download_dataset(data_path):
         os.remove(str(arch_path))
 
 
-def download_and_prepare(N, but_dataset_path):
+def download_and_prepare(N, but_dataset_path, max_duration):
     data_path = ROOT_DATA_PATH / "RawRealDataset"
     data_path.mkdir(exist_ok=True, parents=True)
 
@@ -63,8 +63,8 @@ def download_and_prepare(N, but_dataset_path):
     for filename in glob.glob(str(speech_path) + "/*/*/*.txt"):
         trans_files.append(filename)
 
-    speech_files = []
-    texts = []
+    all_speech_files = []
+    all_texts = []
     for trans_file in trans_files:
         with open(trans_file, "r") as f:
             lines = f.readlines()
@@ -73,8 +73,20 @@ def download_and_prepare(N, but_dataset_path):
             text = " ".join(line.split()[1:]).strip()
 
             filename = Path(trans_file).parent / f"{speech_name}.flac"
-            speech_files.append(filename)
-            texts.append(text)
+            all_speech_files.append(filename)
+            all_texts.append(text)
+
+    speech_files = []
+    texts = []
+    for i in range(len(all_speech_files)):
+        speech = all_speech_files[i]
+        info = torchaudio.info(speech)
+        length = info.num_frames / info.sample_rate
+        if length <= max_duration:
+            speech_files.append(all_speech_files[i])
+            texts.append(all_texts[i])
+
+    print(f"Filtered {100 * len(texts) / len(all_texts)} % of the dataset")
 
     # create prepared dataset
     data_path = ROOT_DATA_PATH / "RealDataset"
@@ -147,6 +159,12 @@ if __name__ == "__main__":
     args.add_argument(
         "-d", type=str, default=None, help="Path to the BUT dataset (default: None)"
     )
+    args.add_argument(
+        "-s",
+        type=float,
+        default=5.0,
+        help="Max duration of clean speech in seconds (default 5.0)",
+    )
     args = args.parse_args()
 
-    download_and_prepare(N=args.N, but_dataset_path=args.d)
+    download_and_prepare(N=args.N, but_dataset_path=args.d, max_duration=args.s)
