@@ -19,9 +19,15 @@ def get_filter(audio, audio_hat):
 
     print("SPEC shape", spectrogram_hat.shape)
 
-    spectr_filter = spectrogram_hat / spectrogram
+    spectr_filter = np.zeros(spectrogram.shape[0], dtype=spectrogram.dtype)
 
-    spectr_filter = spectr_filter.mean(axis=-1)
+    for i in range(spectrogram.shape[-1]):
+        nonzeros = spectrogram[:, i] != 0
+        hat_part = spectrogram_hat[:, i][nonzeros]
+        orig_part = spectrogram[:, i][nonzeros]
+        spectr_filter[i] = (hat_part / orig_part).sum() / spectrogram.shape[-1]
+
+    # spectr_filter = spectr_filter.mean(axis=-1)
 
     # convert to time domain
     spectr_filter = np.fft.irfft(spectr_filter)

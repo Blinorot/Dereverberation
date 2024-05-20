@@ -40,9 +40,18 @@ To install our repository, follow these steps:
    ```
 
 2. Install `pre-commit`:
+
    ```bash
    pre-commit install
    ```
+
+3. Download and prepare synthesized dataset:
+
+   ```bash
+   python3 scripts/prepare_synthesized_dataset.py
+   ```
+
+   You can skip this part, as we provide link to the prepared dataset in `SynthesizedDataset` class.
 
 ## How To Use
 
@@ -58,10 +67,10 @@ To calculate metrics after dereverberation, run this script:
 
 ```bash
 bash scripts/download_asr.sh
-python3 scripts/calculate_metrics.py -d=DATASET_NAME
+python3 -m scripts.calculate_metrics -d=DATASET_NAME -a=ALGORITHM_NAME
 ```
 
-Metrics dictionary will be saved in `data/DATASET_NAME_metrics.pth`.
+Metrics dictionary will be saved in `data/{DATASET_NAME}_{ALGORITHM_NAME}_metrics.pth`.
 
 ## Authors
 

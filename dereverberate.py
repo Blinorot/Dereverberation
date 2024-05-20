@@ -33,10 +33,11 @@ def main(dataset_name, algorithm_name):
         dereverb_speech, inverse_filter = algorithm(data["reverb_speech"])
         dereverb_speech = dereverb_speech / np.abs(dereverb_speech).max()
 
-        dereverb_rir = ss.lfilter(inverse_filter, [1], data["rir"])
+        if data.get("rir") is not None:
+            dereverb_rir = ss.convolve(inverse_filter, data["rir"], mode="full")
+            data["dereverb_rir"] = dereverb_rir
 
         data["dereverb_speech"] = dereverb_speech
-        data["dereverb_rir"] = dereverb_rir
 
         torch.save(data, data_path / f"{i:03}.pth")
 
