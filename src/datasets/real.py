@@ -19,7 +19,7 @@ class RealDataset(Dataset):
         self.data_path = ROOT_PATH / "data" / "RealDataset"
         if not self.data_path.exists():
             arc_path = ROOT_PATH / "data" / "RealDataset.zip"
-            gdown.download(id="1dvltM_XngJjjPZ3-85jhvuS2Ja2kLh4e", output=str(arc_path))
+            gdown.download(id="1JkRlpCgI0POp1zLr6wvc__fxy-VJcH0N", output=str(arc_path))
             shutil.unpack_archive(arc_path, self.data_path)
 
         self.sr = sr
@@ -43,6 +43,7 @@ class RealDataset(Dataset):
         for speech_name in os.listdir(self.data_path / "speech"):
             speech_path = self.data_path / "speech" / speech_name
             reverb_speech_path = self.data_path / "reverb_speech" / speech_name
+            rir_path = self.data_path / "rir" / speech_name
             text_path = self.data_path / "text" / f"{speech_name[:-4]}.txt"
 
             with open(text_path, "r") as f:
@@ -51,12 +52,13 @@ class RealDataset(Dataset):
             index.append(
                 {
                     "reverb_speech_path": str(reverb_speech_path),
+                    "rir_path": str(rir_path),
                     "speech_path": str(speech_path),
                     "text": text,
                 }
             )
 
-            print(speech_name, reverb_speech_path, speech_path)
+            print(speech_name, reverb_speech_path, rir_path, speech_path)
 
         write_json(index, index_path)
 
@@ -66,7 +68,13 @@ class RealDataset(Dataset):
         data = self.index[i]
         speech_path = data["speech_path"]
         reverb_speech_path = data["reverb_speech_path"]
+        rir_path = data["rir_path"]
         text = data["text"]
+
+        rir, rir_sr = torchaudio.load(rir_path)
+        # rir = rir[:, int(rir_sr * 1.01) : int(rir_sr * 1.3)]
+        rir = rir / torch.linalg.vector_norm(rir, ord=2)
+        rir = torchaudio.transforms.Resample(rir_sr, self.sr)(rir)
 
         reverb_speech, reverb_speech_sr = torchaudio.load(reverb_speech_path)
         reverb_speech = torchaudio.transforms.Resample(reverb_speech_sr, self.sr)(
@@ -76,14 +84,14 @@ class RealDataset(Dataset):
         speech, speech_sr = torchaudio.load(speech_path)
         speech = torchaudio.transforms.Resample(speech_sr, self.sr)(speech)
 
-        # rir = rir.to(torch.float64).numpy().sum(axis=0)
+        rir = rir.to(torch.float64).numpy().sum(axis=0)
         speech = speech.to(torch.float64).numpy().sum(axis=0)
         reverb_speech = reverb_speech.to(torch.float64).numpy().sum(axis=0)
         reverb_speech = reverb_speech / np.abs(reverb_speech).max()
 
         return {
             "speech": speech,
-            # "rir": rir,
+            "rir": rir,
             "reverb_speech": reverb_speech,
             "text": text,
         }

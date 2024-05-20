@@ -8,17 +8,17 @@ from scipy.interpolate import interp1d
 
 @dataclass
 class STFTConfig:
-    nperseg: int = 512
+    nperseg: int = 513
     noverlap: int = 256
-    nfft: int = 512
+    nfft: int = 513
     sr: int = 16000
     window: str = "hann"
 
 
 class LTFTConfig:
-    nperseg: int = 2048
+    nperseg: int = 2049
     noverlap: int = 0
-    nfft: int = 2048
+    nfft: int = 2049
     sr: int = 16000
     window: str = "boxcar"
 
@@ -89,7 +89,9 @@ def get_long_spectrogram(audio, ltft_config=LTFTConfig()):
     return spectrogram
 
 
-def extract_amplitude_and_phase_via_f0(amplitude, phase, f0, freqs):
+def extract_amplitude_and_phase_via_f0(
+    amplitude, phase, f0, freqs, stft_config=STFTConfig()
+):
     # amp/phase.shape = F x T
     # each F has info about 1 x 10
     time_shape = amplitude.shape[-1]
@@ -115,7 +117,10 @@ def extract_amplitude_and_phase_via_f0(amplitude, phase, f0, freqs):
 
             freq_bin = np.argmin(diff_freqs)
 
-            phase_lk = phase_l[freq_bin]
+            gamma_ratio = ((stft_config.nperseg - 1) / 2) / stft_config.nperseg
+            phase_shift = 2 * np.pi * freqs[freq_bin] * gamma_ratio
+
+            phase_lk = phase_l[freq_bin] + phase_shift
             amplitude_lk = amplitude_l[freq_bin]
 
             amplitude_list_l.append(amplitude_lk)
