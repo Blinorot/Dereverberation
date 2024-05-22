@@ -72,6 +72,9 @@ def get_single_metrics(data):
         torch.from_numpy(data["dereverb_speech"]).unsqueeze(0).to(torch.float32)
     )
 
+    reverb_min_length = min(speech.shape[-1], reverb_speech.shape[-1])
+    dereverb_min_length = min(speech.shape[-1], dereverb_speech.shape[-1])
+
     # speech_text = transcribe(speech)
     speech_text = data["text"]
     dereverb_text = transcribe(dereverb_speech, model=ASR_MODEL)
@@ -86,8 +89,13 @@ def get_single_metrics(data):
             metric_value = calculator(dereverb_speech) - calculator(reverb_speech)
 
         if metric_name in ["sdr", "si-sdr", "pesq", "stoi"]:
-            dereverb_value = calculator(dereverb_speech[:, : speech.shape[-1]], speech)
-            reverb_value = calculator(reverb_speech[:, : speech.shape[-1]], speech)
+            dereverb_value = calculator(
+                dereverb_speech[:, :dereverb_min_length],
+                speech[:, :dereverb_min_length],
+            )
+            reverb_value = calculator(
+                reverb_speech[:, :reverb_min_length], speech[:, :reverb_min_length]
+            )
             metric_value = dereverb_value - reverb_value
 
             if metric_name in ["sdr", "si-sdr"]:

@@ -19,7 +19,7 @@ class SynthesizedDataset(Dataset):
         self.data_path = ROOT_PATH / "data" / "SynthesizedDataset"
         if not self.data_path.exists():
             arc_path = ROOT_PATH / "data" / "SynthesizedDataset.zip"
-            gdown.download(id="1hasWZ6c0Lw_ZXL8HfsLKcoNhaZk_MJst", output=str(arc_path))
+            gdown.download(id="122FMJ9iGjoLLuoHJGBN7E20w8gDr1WDe", output=str(arc_path))
             shutil.unpack_archive(arc_path, self.data_path)
 
         self.sr = sr
@@ -88,4 +88,6 @@ class SynthesizedDataset(Dataset):
             "rir": rir,
             "reverb_speech": reverb_speech,
             "text": text,
+            "speech_path": speech_path,
+            "rir_path": rir_path,
         }

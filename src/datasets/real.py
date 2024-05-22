@@ -19,7 +19,7 @@ class RealDataset(Dataset):
         self.data_path = ROOT_PATH / "data" / "RealDataset"
         if not self.data_path.exists():
             arc_path = ROOT_PATH / "data" / "RealDataset.zip"
-            gdown.download(id="1JkRlpCgI0POp1zLr6wvc__fxy-VJcH0N", output=str(arc_path))
+            gdown.download(id="1oWFho9QXK8RQcgQB3sZyUN2w43yZ6NRS", output=str(arc_path))
             shutil.unpack_archive(arc_path, self.data_path)
 
         self.sr = sr
@@ -94,4 +94,7 @@ class RealDataset(Dataset):
             "rir": rir,
             "reverb_speech": reverb_speech,
             "text": text,
+            "speech_path": speech_path,
+            "rir_path": rir_path,
+            "reverb_speech_path": reverb_speech_path,
         }

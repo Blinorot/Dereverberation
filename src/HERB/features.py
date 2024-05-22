@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+import libf0
 import numpy as np
 import pyworld as pw
 import scipy.signal as ss
@@ -31,22 +32,40 @@ def get_f0(audio, spectrogram, stft_config=STFTConfig()):
     # we want spectrogram.shape[0] frames, we want f0.shape = spectrogram.shape[0]
     # frame_period = (len(audio) / sr) * 1000  / spectrogram.shape[0]
 
-    frame_period = (audio.shape[0] / sr * 1000) / spectrogram.shape[-1]
+    hop_size = stft_config.nperseg - 1 - stft_config.noverlap
+    new_size = (audio.shape[0] // hop_size) * hop_size + stft_config.nperseg
+    pad_size = new_size - audio.shape[0]
+    padded_audio = np.concatenate([audio, np.zeros(pad_size)])
 
-    _f0, t = pw.dio(audio, sr, frame_period=frame_period)
-    f0 = pw.stonemask(audio, _f0, t, sr)[: spectrogram.shape[-1]]
+    f0, times, conf = libf0.swipe_slim(padded_audio, Fs=sr, H=hop_size)
+    print("SHHHHHHHHHHHHHHAPE", f0.shape, spectrogram.shape)
+    # f0 = f0[1:] # remove 0 timing
+    f0 = f0[: spectrogram.shape[-1]]  # remove extra
 
-    nonzeros = np.nonzero(f0)
+    print(f0)
 
-    x = np.arange(f0.shape[0])[nonzeros]
+    return f0
+    # frame_period = (audio.shape[0] / sr * 1000) / spectrogram.shape[-1]
 
-    values = (f0[nonzeros][0], f0[nonzeros][-1])
+    # _f0, t = pw.dio(audio, sr, frame_period=frame_period)
+    # print("f0", _f0, audio.shape, frame_period)
+    # f0 = pw.stonemask(audio, _f0, t, sr)[: spectrogram.shape[-1]]
+    # print("f0_better", f0)
+    # print(f0.shape)
 
-    f = interp1d(x, f0[nonzeros], bounds_error=False, fill_value=values)
+    # nonzeros = np.nonzero(f0)
 
-    new_f0 = f(np.arange(f0.shape[0]))
+    # x = np.arange(f0.shape[0])[nonzeros]
 
-    return new_f0
+    # values = (f0[nonzeros][0], f0[nonzeros][-1])
+
+    # f = interp1d(x, f0[nonzeros], bounds_error=False, fill_value=values)
+
+    # new_f0 = f(np.arange(f0.shape[0]))
+
+    # print(new_f0.shape)
+
+    # return new_f0
 
 
 def get_amplitude_and_phase(spectrogram):
@@ -56,15 +75,25 @@ def get_amplitude_and_phase(spectrogram):
 
 
 def get_spectrogram(audio, stft_config=STFTConfig()):
-    freqs, times, spectrogram = ss.spectrogram(
+    # freqs, times, spectrogram = ss.spectrogram(
+    #     audio,
+    #     fs=stft_config.sr,
+    #     nperseg=stft_config.nperseg,
+    #     noverlap=stft_config.noverlap,
+    #     window=stft_config.window,
+    #     nfft=stft_config.nfft,
+    #     mode="complex",
+    #     return_onesided=True,
+    # )
+    freqs, times, spectrogram = ss.stft(
         audio,
         fs=stft_config.sr,
         nperseg=stft_config.nperseg,
         noverlap=stft_config.noverlap,
         window=stft_config.window,
         nfft=stft_config.nfft,
-        mode="complex",
         return_onesided=True,
+        padded=True,
     )
     print(freqs)
     print(times)
@@ -75,14 +104,15 @@ def get_spectrogram(audio, stft_config=STFTConfig()):
 
 
 def get_long_spectrogram(audio, ltft_config=LTFTConfig()):
-    freqs, times, spectrogram = ss.spectrogram(
+    freqs, times, spectrogram = ss.stft(
         audio,
         fs=ltft_config.sr,
         nperseg=ltft_config.nperseg,
         noverlap=ltft_config.noverlap,
         window=ltft_config.window,
         nfft=ltft_config.nfft,
-        mode="complex",
+        padded=True,
+        # mode="complex",
         return_onesided=True,
     )
 

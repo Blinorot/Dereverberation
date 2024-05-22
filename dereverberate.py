@@ -30,11 +30,13 @@ def main(dataset_name, algorithm_name):
     for i in tqdm(range(len(dataset))):
         data = dataset[i]
 
+        # print(data["reverb_speech_path"])
+
         dereverb_speech, inverse_filter = algorithm(data["reverb_speech"])
         dereverb_speech = dereverb_speech / np.abs(dereverb_speech).max()
 
         if data.get("rir") is not None:
-            dereverb_rir = ss.convolve(inverse_filter, data["rir"], mode="full")
+            dereverb_rir = ss.lfilter(inverse_filter, [1], data["rir"])
             data["dereverb_rir"] = dereverb_rir
 
         data["dereverb_speech"] = dereverb_speech

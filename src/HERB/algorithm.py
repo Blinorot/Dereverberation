@@ -28,6 +28,11 @@ def get_filter(audio, audio_hat):
         orig_part = spectrogram[:, i][nonzeros]
         spectr_filter[nonzeros] += (hat_part / orig_part) / spectrogram.shape[-1]
 
+        # ratio = hat_part / orig_part
+        # ratio_coef = np.abs(hat_part)
+        # ratio_bot_coef = np.abs(spectrogram_hat).sum(axis=-1)[nonzeros]
+        # spectr_filter[nonzeros] += (ratio_coef * ratio) / ratio_bot_coef
+
     # print("FILTER", spectr_filter)
 
     # spectr_filter = spectrogram_hat / spectrogram
@@ -45,6 +50,8 @@ def apply_filter(audio, spectr_filter, ltft_config=LTFTConfig()):
     print(spectr_filter.shape)
     print(spectr_filter)
     predicted_audio = ss.convolve(audio, spectr_filter, mode="same")
+    # predicted_audio = ss.convolve(audio, spectr_filter, mode="full")
+    # predicted_audio = predicted_audio[:audio.shape[0]]
     # predicted_audio = ss.lfilter(spectr_filter, [1], audio)
     # spectrogram = get_long_spectrogram(audio)
     # print("spec_shape_before", spectrogram.shape)
@@ -85,7 +92,7 @@ def get_audio_hat_numbda(
     for i in range(N):
         overlap = 0
         for l in range(len(audio_hat_list)):
-            n_l = n_l = (nperseg - noverlap) * l + (nperseg // 2 + 1)
+            n_l = (nperseg - noverlap) * l + (nperseg // 2 + 1)
             if nperseg > nperseg // 2 + 1 + i - n_l >= 0:
                 coef = window[nperseg // 2 + 1 + i - n_l]
             else:
@@ -133,9 +140,13 @@ def get_audio_hat(audio_for_f0, audio_for_other, stft_config=STFTConfig()):
     return audio_hat
 
 
-def one_step(audio_for_f0, audio_for_other):
+def one_step(audio_for_f0, audio_for_other, n_repeats):
     audio_hat = get_audio_hat(audio_for_f0, audio_for_other)
 
+    # padded_audio_for_other = pad_audio(audio_for_other, n_repeats)
+    # padded_audio_hat = pad_audio(audio_hat, n_repeats)
+
+    # spectr_filter = get_filter(padded_audio_for_other, padded_audio_hat)
     spectr_filter = get_filter(audio_for_other, audio_hat)
 
     predicted_audio = apply_filter(audio_for_other, spectr_filter)
@@ -146,7 +157,7 @@ def one_step(audio_for_f0, audio_for_other):
 def pad_audio(audio, n_repeats):
     if n_repeats == 0:
         return audio
-    audio = np.concatenate([audio, np.zeros(1000)])
+    # audio = np.concatenate([audio, np.zeros(1000)])
     audio = np.tile(audio, n_repeats)
     return audio
 
@@ -154,21 +165,24 @@ def pad_audio(audio, n_repeats):
 def dereverberate(short_audio, steps=3, n_repeats=0):
     # Step 0
     audio = pad_audio(short_audio, n_repeats)
+    # audio = short_audio
 
     # STEP 1
-    predicted_audio_1, spectr_filter_1 = one_step(audio, audio)
+    predicted_audio_1, spectr_filter_1 = one_step(audio, audio, n_repeats)
 
     if steps == 1:
         return predicted_audio_1, spectr_filter_1
 
     # STEP 2
-    predicted_audio_2, spectr_filter_2 = one_step(predicted_audio_1, audio)
+    predicted_audio_2, spectr_filter_2 = one_step(predicted_audio_1, audio, n_repeats)
 
     if steps == 2:
         return predicted_audio_2, spectr_filter_2
 
     # STEP 3
-    predicted_audio_3, spectr_filter_3 = one_step(predicted_audio_2, predicted_audio_2)
+    predicted_audio_3, spectr_filter_3 = one_step(
+        predicted_audio_2, predicted_audio_2, n_repeats
+    )
 
     print(spectr_filter_1.shape, spectr_filter_2.shape, spectr_filter_3.shape)
 
