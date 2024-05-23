@@ -3,7 +3,7 @@ import numpy as np
 from nara_wpe.wpe import wpe
 from nara_wpe.utils import stft, istft
 
-# define a funciton that given an input signal, it returns the dereverberated signal
+# define a funciton that given an input signal, it returns the dereverberated signal using wpe
 def wpe_dereverberation(signal, taps=10, delay=3, iterations=3):
     # apply WPE to the signal
     Y = stft(signal, size=512, shift=128)
