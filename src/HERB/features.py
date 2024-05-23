@@ -9,9 +9,9 @@ from scipy.interpolate import interp1d
 
 @dataclass
 class STFTConfig:
-    nperseg: int = 513
-    noverlap: int = 256
-    nfft: int = 513
+    nperseg: int = 673
+    noverlap: int = 336
+    nfft: int = 673
     sr: int = 16000
     window: str = "hann"
 
