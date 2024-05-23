@@ -16,14 +16,12 @@ class SynthesizedDataset(Dataset):
     def __init__(self, sr=16000):
         super().__init__()
 
-        self.data_path = ROOT_PATH / "data"
-        self.data_path.mkdir(exist_ok=True, parents=True)
+        self.data_path = ROOT_PATH / "data" / "SynthesizedDataset"
+        self.data_path.parent.mkdir(exist_ok=True, parents=True)
         if not self.data_path.exists():
             arc_path = ROOT_PATH / "data" / "SynthesizedDataset.zip"
             gdown.download(id="122FMJ9iGjoLLuoHJGBN7E20w8gDr1WDe", output=str(arc_path))
-            shutil.unpack_archive(arc_path, self.data_path)
-
-        self.data_path = self.data_path / "SynthesizedDataset"
+            shutil.unpack_archive(arc_path, self.data_path.parent)
 
         self.sr = sr
 
