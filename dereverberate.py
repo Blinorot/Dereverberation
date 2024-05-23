@@ -30,7 +30,7 @@ def main(dataset_name, algorithm_name):
     for i in tqdm(range(len(dataset))):
         data = dataset[i]
 
-        # print(data["reverb_speech_path"])
+        print(data["speech_path"])
 
         dereverb_speech, inverse_filter = algorithm(data["reverb_speech"])
         dereverb_speech = dereverb_speech / np.abs(dereverb_speech).max()

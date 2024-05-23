@@ -33,9 +33,11 @@ def get_f0(audio, spectrogram, stft_config=STFTConfig()):
     # frame_period = (len(audio) / sr) * 1000  / spectrogram.shape[0]
 
     hop_size = stft_config.nperseg - 1 - stft_config.noverlap
-    new_size = (audio.shape[0] // hop_size) * hop_size + stft_config.nperseg
-    pad_size = new_size - audio.shape[0]
-    padded_audio = np.concatenate([audio, np.zeros(pad_size)])
+    # new_size = (audio.shape[0] // hop_size + 2) * hop_size + stft_config.nperseg
+    # pad_size = new_size - audio.shape[0]
+    # pad to avoid timing error
+    padded_audio = np.concatenate([audio, audio])
+    print("Padded audio shape", padded_audio.shape)
 
     f0, times, conf = libf0.swipe_slim(padded_audio, Fs=sr, H=hop_size)
     print("SHHHHHHHHHHHHHHAPE", f0.shape, spectrogram.shape)
