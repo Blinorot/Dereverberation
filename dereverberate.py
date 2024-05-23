@@ -41,7 +41,7 @@ def main(dataset_name, algorithm_name):
                 dereverb_rir = ss.lfilter(inverse_filter, [1], data["rir"])
                 data["dereverb_rir"] = dereverb_rir
         else:
-            dereverb_speech = algorithm(data["reverb_speech"])
+            dereverb_speech = algorithm(data["reverb_speech"].reshape(1, -1))
 
         dereverb_speech = dereverb_speech / np.abs(dereverb_speech).max()
 

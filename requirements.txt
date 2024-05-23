@@ -3,7 +3,7 @@ torchaudio==2.2.0
 torchvision==0.17.0
 torchmetrics
 numpy
-scipy
+scipy==1.11.0
 pyworld
 tqdm
 matplotlib
@@ -16,6 +16,7 @@ pystoi
 git+https://github.com/detly/gammatone
 pyctcdecode
 libf0
+nara_wpe
 
 notebook
 
