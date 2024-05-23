@@ -7,8 +7,9 @@ from tqdm.auto import tqdm
 
 import src.datasets
 from src.HERB.algorithm import dereverberate
-from Dereverberation.src.LP.algorithm import LP_dereverberation
+from src.LP.algorithm import LP_dereverberation
 from src.utils import ROOT_PATH
+from src.WPE.wpe import wpe_dereverberation
 
 
 def main(dataset_name, algorithm_name):
@@ -24,6 +25,8 @@ def main(dataset_name, algorithm_name):
         algorithm = dereverberate
     elif algorithm_name == "LP":
         algorithm = LP_dereverberation
+    elif algorithm_name == "WPE":
+        algorithm = wpe_dereverberation
     else:
         raise NotImplementedError()
 
@@ -32,12 +35,15 @@ def main(dataset_name, algorithm_name):
 
         print(data["speech_path"])
 
-        dereverb_speech, inverse_filter = algorithm(data["reverb_speech"])
-        dereverb_speech = dereverb_speech / np.abs(dereverb_speech).max()
+        if algorithm_name != "WPE":
+            dereverb_speech, inverse_filter = algorithm(data["reverb_speech"])
+            if data.get("rir") is not None:
+                dereverb_rir = ss.lfilter(inverse_filter, [1], data["rir"])
+                data["dereverb_rir"] = dereverb_rir
+        else:
+            dereverb_speech = algorithm(data["reverb_speech"])
 
-        if data.get("rir") is not None:
-            dereverb_rir = ss.lfilter(inverse_filter, [1], data["rir"])
-            data["dereverb_rir"] = dereverb_rir
+        dereverb_speech = dereverb_speech / np.abs(dereverb_speech).max()
 
         data["dereverb_speech"] = dereverb_speech
 

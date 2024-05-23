@@ -39,14 +39,14 @@ def get_f0(audio, spectrogram, stft_config=STFTConfig()):
     padded_audio = np.concatenate([audio, audio])
     print("Padded audio shape", padded_audio.shape)
 
-    f0, times, conf = libf0.swipe_slim(padded_audio, Fs=sr, H=hop_size)
+    f0, times, conf = libf0.swipe(padded_audio, Fs=sr, H=hop_size)
     print("SHHHHHHHHHHHHHHAPE", f0.shape, spectrogram.shape)
     # f0 = f0[1:] # remove 0 timing
     f0 = f0[: spectrogram.shape[-1]]  # remove extra
 
-    print(f0)
+    # print(f0)
 
-    return f0
+    # return f0
     # frame_period = (audio.shape[0] / sr * 1000) / spectrogram.shape[-1]
 
     # _f0, t = pw.dio(audio, sr, frame_period=frame_period)
@@ -55,19 +55,19 @@ def get_f0(audio, spectrogram, stft_config=STFTConfig()):
     # print("f0_better", f0)
     # print(f0.shape)
 
-    # nonzeros = np.nonzero(f0)
+    nonzeros = np.nonzero(f0)
 
-    # x = np.arange(f0.shape[0])[nonzeros]
+    x = np.arange(f0.shape[0])[nonzeros]
 
-    # values = (f0[nonzeros][0], f0[nonzeros][-1])
+    values = (f0[nonzeros][0], f0[nonzeros][-1])
 
-    # f = interp1d(x, f0[nonzeros], bounds_error=False, fill_value=values)
+    f = interp1d(x, f0[nonzeros], bounds_error=False, fill_value=values)
 
-    # new_f0 = f(np.arange(f0.shape[0]))
+    new_f0 = f(np.arange(f0.shape[0]))
 
-    # print(new_f0.shape)
+    print(new_f0.shape)
 
-    # return new_f0
+    return new_f0
 
 
 def get_amplitude_and_phase(spectrogram):

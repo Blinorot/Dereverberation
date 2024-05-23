@@ -73,7 +73,7 @@ def measure_rt60(h, fs=1, decay_db=60, plot=False, rt60_tgt=None):
 
     # -5 dB headroom
     i_5db = np.min(np.where(-5 - energy_db > 0)[0])
-    e_5db = energy_db[i_5db]
+    # e_5db = energy_db[i_5db]
     t_5db = i_5db / fs
 
     # after decay
@@ -88,34 +88,6 @@ def measure_rt60(h, fs=1, decay_db=60, plot=False, rt60_tgt=None):
     est_rt60 = (60 / decay_db) * decay_time
 
     if plot:
-        import matplotlib.pyplot as plt
-
-        # Remove clip power below to minimum energy (for plotting purpose mostly)
-        energy_min = energy[-1]
-        energy_db_min = energy_db[-1]
-        power[power < energy[-1]] = energy_min
-        power_db = 10 * np.log10(power)
-        power_db -= np.max(power_db)
-
-        # time vector
-        def get_time(x, fs):
-            return np.arange(x.shape[0]) / fs - i_5db / fs
-
-        T = get_time(power_db, fs)
-
-        # plot power and energy
-        plt.plot(get_time(energy_db, fs), energy_db, label="Energy")
-
-        # now the linear fit
-        plt.plot([0, est_rt60], [e_5db, -65], "--", label="Linear Fit")
-        plt.plot(T, np.ones_like(T) * -60, "--", label="-60 dB")
-        plt.vlines(
-            est_rt60, energy_db_min, 0, linestyles="dashed", label="Estimated RT60"
-        )
-
-        if rt60_tgt is not None:
-            plt.vlines(rt60_tgt, energy_db_min, 0, label="Target RT60")
-
-        plt.legend()
+        return fs, i_5db, energy, energy_db, power
 
     return est_rt60

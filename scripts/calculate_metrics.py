@@ -36,6 +36,14 @@ METRICS = {
     "wer": WordErrorRate(),
     "cer_strong": CharErrorRate(),
     "wer_strong": WordErrorRate(),
+    "cer_reverb": CharErrorRate(),
+    "wer_reverb": WordErrorRate(),
+    "cer_dereverb": CharErrorRate(),
+    "wer_dereverb": WordErrorRate(),
+    "cer_reverb_strong": CharErrorRate(),
+    "wer_reverb_strong": WordErrorRate(),
+    "cer_dereverb_strong": CharErrorRate(),
+    "wer_dereverb_strong": WordErrorRate(),
     "srmr": SpeechReverberationModulationEnergyRatio(SAMPLE_RATE),
     "sdr": SignalDistortionRatio(),
     "si-sdr": ScaleInvariantSignalDistortionRatio(),
@@ -110,6 +118,18 @@ def get_single_metrics(data):
             print("reverb text", reverb_text)
             print("speech text", speech_text)
             metric_value = dereverb_value - reverb_value
+
+        if metric_name in ["cer_reverb", "wer_reverb"]:
+            metric_value = calculator(reverb_text, speech_text)
+
+        if metric_name in ["cer_dereverb", "wer_dereverb"]:
+            metric_value = calculator(dereverb_text, speech_text)
+
+        if metric_name in ["cer_reverb_strong", "wer_reverb_strong"]:
+            metric_value = calculator(reverb_text_strong, speech_text)
+
+        if metric_name in ["cer_dereverb_strong", "wer_dereverb_strong"]:
+            metric_value = calculator(dereverb_text_strong, speech_text)
 
         if metric_name in ["cer_strong", "wer_strong"]:
             dereverb_value = calculator(dereverb_text_strong, speech_text)
