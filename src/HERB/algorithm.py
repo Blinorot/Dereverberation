@@ -5,7 +5,7 @@ import torch
 from numba.typed import List
 from scipy.signal.windows import hamming
 
-from src.herb.features import (
+from src.HERB.features import (
     LTFTConfig,
     STFTConfig,
     get_all_features,
