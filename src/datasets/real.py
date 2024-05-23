@@ -16,11 +16,14 @@ class RealDataset(Dataset):
     def __init__(self, sr=16000):
         super().__init__()
 
-        self.data_path = ROOT_PATH / "data" / "RealDataset"
+        self.data_path = ROOT_PATH / "data"
+        self.data_path.mkdir(exist_ok=True, parents=True)
         if not self.data_path.exists():
             arc_path = ROOT_PATH / "data" / "RealDataset.zip"
             gdown.download(id="1oWFho9QXK8RQcgQB3sZyUN2w43yZ6NRS", output=str(arc_path))
             shutil.unpack_archive(arc_path, self.data_path)
+
+        self.data_path = self.data_path / "RealDataset"
 
         self.sr = sr
 
