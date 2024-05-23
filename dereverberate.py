@@ -7,7 +7,7 @@ from tqdm.auto import tqdm
 
 import src.datasets
 from src.HERB.algorithm import dereverberate
-from src.LP.algotithm import LP_dereverberation
+from Dereverberation.src.LP.algorithm import LP_dereverberation
 from src.utils import ROOT_PATH
 
 
