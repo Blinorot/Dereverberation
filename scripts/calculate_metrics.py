@@ -141,7 +141,7 @@ def get_single_metrics(data):
             metric_value = dereverb_value - reverb_value
 
         if metric_name == "t60":
-            if rir is None:
+            if dereverb_rir is None:
                 metric_value = 0
             else:
                 metric_value = calculator(dereverb_rir) - calculator(rir)
