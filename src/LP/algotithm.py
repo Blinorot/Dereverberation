@@ -90,9 +90,9 @@ def inverse_filter_frequency_domain(rev_residual, mu=3e-6, LF=300, niter=200):
             zrn = np.fft.ifft(Gh * Yrn)
 
             zrn[:p-1] = 0
-            zr2[p:] = zrn[p:] ** 2
-            zr3[p:] = zrn[p:] ** 3
-            zr4[p:] = zrn[p:] ** 4
+            zr2[p:] = np.abs(zrn[p:] ** 2)
+            zr3[p:] = np.abs(zrn[p:] ** 3)
+            zr4[p:] = np.abs(zrn[p:] ** 4)
 
             Z2 = np.sum(zr2[p:])
             Z4 = np.sum(zr4[p:])
