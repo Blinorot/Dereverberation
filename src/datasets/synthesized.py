@@ -1,3 +1,7 @@
+import os
+import shutil
+
+import gdown
 import numpy as np
 import torch
 import torchaudio
@@ -8,22 +12,26 @@ from torchaudio.utils import download_asset
 from src.utils import ROOT_PATH, normalize, read_json, write_json
 
 
-class ExampleDataset(Dataset):
+class SynthesizedDataset(Dataset):
     def __init__(self, sr=16000):
         super().__init__()
 
-        data_path = ROOT_PATH / "data" / "ExampleDataset"
-        data_path.mkdir(exist_ok=True, parents=True)
+        self.data_path = ROOT_PATH / "data" / "SynthesizedDataset"
+        self.data_path.parent.mkdir(exist_ok=True, parents=True)
+        if not self.data_path.exists():
+            arc_path = ROOT_PATH / "data" / "SynthesizedDataset.zip"
+            gdown.download(id="122FMJ9iGjoLLuoHJGBN7E20w8gDr1WDe", output=str(arc_path))
+            shutil.unpack_archive(arc_path, self.data_path.parent)
 
         self.sr = sr
 
-        self.index = self.load_index(data_path)
+        self.index = self.load_index()
 
     def __len__(self):
         return len(self.index)
 
-    def load_index(self, data_path):
-        index_path = data_path / "index.json"
+    def load_index(self):
+        index_path = self.data_path / "index.json"
 
         if index_path.exists():
             return read_json(index_path)
@@ -31,23 +39,25 @@ class ExampleDataset(Dataset):
             return self.create_index(index_path)
 
     def create_index(self, index_path):
-        rir_path = download_asset(
-            "tutorial-assets/Lab41-SRI-VOiCES-rm1-impulse-mc01-stu-clo-8000hz.wav"
-        )
-        speech_path = download_asset(
-            "tutorial-assets/Lab41-SRI-VOiCES-src-sp0307-ch127535-sg0042-8000hz.wav"
-        )
+        index = []
 
-        text = "i had that curiosity beside me at this moment"
-        text = normalize(text)
+        for speech_name in os.listdir(self.data_path / "speech"):
+            speech_path = self.data_path / "speech" / speech_name
+            rir_path = self.data_path / "rir" / speech_name
+            text_path = self.data_path / "text" / f"{speech_name[:-4]}.txt"
 
-        index = [
-            {
-                "rir_path": rir_path,
-                "speech_path": speech_path,
-                "text": text,
-            }
-        ]
+            with open(text_path, "r") as f:
+                text = normalize(f.read())
+
+            index.append(
+                {
+                    "rir_path": str(rir_path),
+                    "speech_path": str(speech_path),
+                    "text": text,
+                }
+            )
+
+            print(speech_name, rir_path, speech_path)
 
         write_json(index, index_path)
 
@@ -60,15 +70,14 @@ class ExampleDataset(Dataset):
         text = data["text"]
 
         rir, rir_sr = torchaudio.load(rir_path)
-        rir = rir[:, int(rir_sr * 1.01) : int(rir_sr * 1.3)]
+        # rir = rir[:, int(rir_sr * 1.01) : int(rir_sr * 1.3)]
         rir = rir / torch.linalg.vector_norm(rir, ord=2)
         rir = torchaudio.transforms.Resample(rir_sr, self.sr)(rir)
 
         speech, speech_sr = torchaudio.load(speech_path)
         speech = torchaudio.transforms.Resample(speech_sr, self.sr)(speech)
 
-        # take only start, like lfilter in ss
-        reverb_speech = F.fftconvolve(speech, rir)[:, : speech.shape[-1]]
+        reverb_speech = F.fftconvolve(speech, rir)
 
         rir = rir.to(torch.float64).numpy().sum(axis=0)
         speech = speech.to(torch.float64).numpy().sum(axis=0)
@@ -80,4 +89,6 @@ class ExampleDataset(Dataset):
             "rir": rir,
             "reverb_speech": reverb_speech,
             "text": text,
+            "speech_path": speech_path,
+            "rir_path": rir_path,
         }

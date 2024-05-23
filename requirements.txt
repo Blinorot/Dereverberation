@@ -15,6 +15,7 @@ pesq
 pystoi
 git+https://github.com/detly/gammatone
 pyctcdecode
+libf0
 
 notebook
 
