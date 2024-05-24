@@ -17,6 +17,7 @@ git+https://github.com/detly/gammatone
 pyctcdecode
 libf0
 nara_wpe
+seaborn
 
 notebook
 

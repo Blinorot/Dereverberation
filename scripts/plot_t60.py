@@ -6,6 +6,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 import torch
 from scipy.interpolate import interp1d
 
@@ -15,6 +16,8 @@ from scripts.measure_t60 import measure_rt60
 ROOT_PATH = Path(__file__).absolute().resolve().parent.parent
 SAMPLE_RATE = 16000
 DECAY_DB = 60
+
+sns.set_style("whitegrid")
 
 METRICS = {
     "t60": partial(measure_rt60, fs=SAMPLE_RATE, decay_db=DECAY_DB, plot=False),
@@ -196,13 +199,13 @@ def get_data_and_plot_t60(dataset_name, algorithm_name):
 
 def get_all():
     dataset_names = ["SynthesizedDataset", "RealDataset"]
-    algorithm_names = ["LP", "HERB"]
+    algorithm_names = ["LP", "HERB", "WPE"]
 
     save_path = ROOT_PATH / "data" / "plots"
     save_path.mkdir(exist_ok=True, parents=True)
-    save_path = save_path / "all_plots.pdf"
+    save_path = save_path / "all_t60_plots.pdf"
 
-    fig, axes = plt.subplots(2, 2, figsize=(10, 10))
+    fig, axes = plt.subplots(2, 3, figsize=(9, 6))
 
     for i, dataset_name in enumerate(dataset_names):
         for j, algorithm_name in enumerate(algorithm_names):
