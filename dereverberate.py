@@ -35,13 +35,10 @@ def main(dataset_name, algorithm_name):
 
         print(data["speech_path"])
 
-        if algorithm_name != "WPE":
-            dereverb_speech, inverse_filter = algorithm(data["reverb_speech"])
-            if data.get("rir") is not None:
-                dereverb_rir = ss.lfilter(inverse_filter, [1], data["rir"])
-                data["dereverb_rir"] = dereverb_rir
-        else:
-            dereverb_speech = algorithm(data["reverb_speech"])
+        dereverb_speech, inverse_filter = algorithm(data["reverb_speech"])
+        if data.get("rir") is not None:
+            dereverb_rir = ss.lfilter(inverse_filter, [1], data["rir"])
+            data["dereverb_rir"] = dereverb_rir
 
         dereverb_speech = dereverb_speech / np.abs(dereverb_speech).max()
 
